@@ -5,8 +5,7 @@ import asyncio
 import requests
 from datetime import timedelta
 from nostr_sdk import (
-    Client, NostrSigner, Keys, Filter, EventBuilder, Tag, Kind,
-    NostrConnect, NostrConnectUri, RelayUrl
+    Client, NostrSigner, Keys, Filter, EventBuilder, Tag, Kind, RelayUrl
 )
 import sys
 sys.stdout.reconfigure(line_buffering=True)
@@ -109,24 +108,12 @@ async def run_single_cycle():
         print("Error: Missing secrets in GitHub.")
         return
 
+    # التعديل هنا: إزالة أكواد NostrConnect والاعتماد فقط على مفتاح nsec الخاص بك
     if NOSTR_SECRET.startswith("nsec1"):
         keys = Keys.parse(NOSTR_SECRET)
         signer = NostrSigner.keys(keys)
-    elif NOSTR_SECRET.startswith("bunker://") or NOSTR_SECRET.startswith("nostrconnect://"):
-        app_keys = Keys.generate()
-        try:
-            uri = NostrConnectUri.parse(NOSTR_SECRET)
-        except Exception:
-            uri = NOSTR_SECRET
-        try:
-            from nostr_sdk import NostrConnectOptions
-            opts = NostrConnectOptions()
-        except Exception:
-            opts = None
-        nc = NostrConnect(uri, app_keys, timedelta(seconds=30), opts)
-        signer = NostrSigner.nostr_connect(nc)
     else:
-        print("Error: Invalid NOSTR_NSEC format.")
+        print("Error: Invalid NOSTR_NSEC format. Must start with nsec1.")
         return
 
     client = Client(signer)
