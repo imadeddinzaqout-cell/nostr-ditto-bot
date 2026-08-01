@@ -3,7 +3,7 @@ import time
 import requests
 from nostr_sdk import Keys, Client, EventBuilder, Filter, Kind, Tag
 from datetime import timedelta
-
+from nostr_sdk import Keys, Client, EventBuilder, Filter, Kind, Tag, NostrSigner
 # ==========================================
 # 1. إعدادات المفاتيح (من GitHub Secrets)
 # ==========================================
