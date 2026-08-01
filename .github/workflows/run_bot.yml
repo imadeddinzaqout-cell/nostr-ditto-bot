@@ -20,7 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install nostr-sdk requests
+          pip install nostr-sdk==0.33.0 requests
 
       - name: Execute Bot
         env:
