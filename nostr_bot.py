@@ -1,9 +1,9 @@
 import os
 import time
 import requests
-from nostr_sdk import Keys, Client, EventBuilder, Filter, Kind, Tag
-from datetime import timedelta
 from nostr_sdk import Keys, Client, EventBuilder, Filter, Kind, Tag, NostrSigner
+from datetime import timedelta
+
 # ==========================================
 # 1. إعدادات المفاتيح (من GitHub Secrets)
 # ==========================================
@@ -58,8 +58,12 @@ def generate_reply(post_text):
 def main():
     print("--- Starting Ditto Bot ---")
     
-    # الاتصال بخوادم Ditto الأساسية
-    client = Client(bot_keys)
+    # تحويل المفاتيح إلى كائن توقيع (Signer) - الحل الجديد
+    signer = NostrSigner.keys(bot_keys)
+    
+    # تمرير الـ Signer للعميل
+    client = Client(signer)
+    
     client.add_relay("wss://relay.ditto.pub")
     client.add_relay("wss://nos.lol")
     client.add_relay("wss://relay.damus.io")
