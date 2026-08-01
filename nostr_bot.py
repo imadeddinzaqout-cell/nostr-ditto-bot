@@ -144,7 +144,8 @@ async def run_single_cycle():
     if bot_pk:
         history_filter = Filter().author(bot_pk).kind(Kind(1)).limit(500)
         try:
-            history_obj = await client.fetch_events(history_filter, timedelta(seconds=12))
+            # التعديل الأول: استخدام get_events_of ووضع الفلتر داخل قائمة []
+            history_obj = await client.get_events_of([history_filter], timedelta(seconds=12))
             history_list = history_obj.to_vec() if hasattr(history_obj, "to_vec") else list(history_obj)
         except Exception:
             history_list = []
@@ -164,7 +165,8 @@ async def run_single_cycle():
     # جلب أحدث 300 منشور على الشبكة
     f = Filter().kind(Kind(1)).limit(300)
     try:
-        events_obj = await client.fetch_events(f, timedelta(seconds=10))
+        # التعديل الثاني: استخدام get_events_of ووضع الفلتر داخل قائمة []
+        events_obj = await client.get_events_of([f], timedelta(seconds=10))
         events_list = events_obj.to_vec() if hasattr(events_obj, "to_vec") else list(events_obj)
     except Exception as e:
         print(f"Error fetching events: {e}")
