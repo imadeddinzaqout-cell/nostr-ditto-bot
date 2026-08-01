@@ -1,6 +1,7 @@
 import os
 import time
 import requests
+import asyncio
 from nostr_sdk import Keys, Client, EventBuilder, Filter, Kind, Tag, NostrSigner
 from datetime import timedelta
 
@@ -53,33 +54,29 @@ def generate_reply(post_text):
         return None
 
 # ==========================================
-# 3. محرك Ditto / Nostr
+# 3. محرك Ditto / Nostr (مُحدّث ليدعم Async)
 # ==========================================
-def main():
+async def main():
     print("--- Starting Ditto Bot ---")
     
-    # تحويل المفاتيح إلى كائن توقيع (Signer) - الحل الجديد
     signer = NostrSigner.keys(bot_keys)
-    
-    # تمرير الـ Signer للعميل
     client = Client(signer)
     
-    client.add_relay("wss://relay.ditto.pub")
-    client.add_relay("wss://nos.lol")
-    client.add_relay("wss://relay.damus.io")
-    client.connect()
+    # إضافة await قبل دوال الاتصال
+    await client.add_relay("wss://relay.ditto.pub")
+    await client.add_relay("wss://nos.lol")
+    await client.add_relay("wss://relay.damus.io")
+    await client.connect()
 
-    # جلب أحدث المنشورات (آخر 10 منشورات نصية كمثال)
     f = Filter().kind(Kind(1)).limit(10)
     
     try:
-        # جلب المنشورات من الخوادم
-        events = client.get_events_of([f], timedelta(seconds=10))
+        # إضافة await قبل جلب المنشورات
+        events = await client.get_events_of([f], timedelta(seconds=10))
         
         for event in events:
             author_pubkey = event.author().to_hex()
             
-            # فلترة القائمة السوداء (لمنع التكرار والرد على النفس)
             if author_pubkey in IGNORED_PUBKEYS:
                 print(f"Skipping post from blacklisted pubkey: {author_pubkey}")
                 continue
@@ -88,28 +85,27 @@ def main():
             print(f"\n--- Found new post on Ditto ---")
             print(f"Content: {post_text[:100]}...")
             
-            # توليد الرد
+            # توليد الرد (هذه الدالة تبقى متزامنة كما هي لأنها تستخدم requests)
             reply_text = generate_reply(post_text)
             
             if reply_text:
                 print(f"AI Reply: {reply_text}")
                 
-                # بناء وتوقيع الرد ليظهر كتعليق على المنشور الأصلي
-                # إضافة Tag للربط بالمنشور الأصلي (e tag) وصاحب المنشور (p tag)
                 reply_event = EventBuilder.text_note(reply_text, [
                     Tag.parse(["e", event.id().to_hex(), "", "reply"]),
                     Tag.parse(["p", author_pubkey])
                 ]).to_event(bot_keys)
                 
-                # نشر الرد
-                client.send_event(reply_event)
+                # إضافة await قبل إرسال الرد
+                await client.send_event(reply_event)
                 print("✅ Reply posted successfully on Ditto!")
                 
-                # تأخير زمني لتجنب حظر الخوادم (Spam Limits)
-                time.sleep(30)
+                # تأخير زمني لتجنب حظر الخوادم باستخدام asyncio.sleep
+                await asyncio.sleep(30)
                 
     except Exception as e:
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    main()
+    # تشغيل الدالة غير المتزامنة باستخدام asyncio.run
+    asyncio.run(main())
