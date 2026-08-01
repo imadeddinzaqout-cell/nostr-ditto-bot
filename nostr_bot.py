@@ -5,7 +5,7 @@ import asyncio
 import requests
 from datetime import timedelta
 from nostr_sdk import (
-    Client, NostrSigner, Keys, Filter, EventBuilder, Tag, Kind, RelayUrl
+    Client, NostrSigner, Keys, Filter, EventBuilder, Tag, Kind
 )
 import sys
 sys.stdout.reconfigure(line_buffering=True)
@@ -108,7 +108,6 @@ async def run_single_cycle():
         print("Error: Missing secrets in GitHub.")
         return
 
-    # التعديل هنا: إزالة أكواد NostrConnect والاعتماد فقط على مفتاح nsec الخاص بك
     if NOSTR_SECRET.startswith("nsec1"):
         keys = Keys.parse(NOSTR_SECRET)
         signer = NostrSigner.keys(keys)
@@ -126,11 +125,9 @@ async def run_single_cycle():
         "wss://nos.lol"           # خادم مساعد يستخدمه مجتمع Ditto بكثرة
     ]
     
+    # التعديل هنا: تمرير الرابط النصي مباشرة بدون RelayUrl
     for r in relay_list:
-        try:
-            await client.add_relay(RelayUrl.parse(r))
-        except Exception:
-            await client.add_relay(r)
+        await client.add_relay(r)
 
     await client.connect()
     print("Connected to Ditto Relays!")
